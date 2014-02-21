@@ -201,8 +201,8 @@ For convenience, all the commands are assuming you're logged in as root. If need
 
 First we need to install the Swift software: (Much thanks to [OpenStack docs](http://docs.openstack.org/developer/swift/development_saio.html))
 
-    apt-get update
-    apt-get install swift swauth swift-account swift-container swift-object swift-proxy memcached python-keystoneclient python-swiftclient python-webob xfsprogs
+    sudo apt-get update
+    sudo apt-get install swift swauth swift-account swift-container swift-object swift-proxy memcached python-keystoneclient python-swiftclient python-webob xfsprogs
 
 Like our other services the packages have created a system user but we also need an OpenStack user and to tell Keynote that Swift actually exists. This should be very familiar:
 
@@ -245,7 +245,7 @@ Next we need to have somewhere to store everything. We're going to use a 3GB dis
 
 Swift utilizes `rsync` extensively to send copies around to each node, so we need to set up `rsyncd` to be sitting and listening for swift uploads.
 
-    sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/g' /etc/default/rsync
+    sudo sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/g' /etc/default/rsync
 
     cat << EOF > /etc/rsyncd.conf
     uid = swift
@@ -419,9 +419,9 @@ Additionally we have to need to add a salt for Swift to use when making it's has
 
 Lastly we need to add configuration files for the Object Expiration daemon and some information for our nodes.
 
-    mkdir -p /etc/swift/object-server
-    mkdir -p /etc/swift/account-server
-    mkdir -p /etc/swift/container-server
+    sudo mkdir -p /etc/swift/object-server
+    sudo mkdir -p /etc/swift/account-server
+    sudo mkdir -p /etc/swift/container-server
 
     ( cat | sudo tee /etc/swift/object-expirer.conf ) <<EOF
     [DEFAULT]
@@ -622,50 +622,50 @@ And then some regex fun to replicate the above for storage nodes 2, 3 and 4.
 Lastly some house keeping and missing folders:
 
     cd /etc/swift
-    mkdir -p /var/swift/keystone-signing
-    chown -R swift:swift /var/swift/keystone-signing
+    sudo mkdir -p /var/swift/keystone-signing
+    sudo chown -R swift:swift /var/swift/keystone-signing
 
 Next we'll be creating our rings. Our partition power is set to 6 because we're making a *tiny* Swift installation. (The arguments are partition power, replication number, minimum rebuild hours). Replication does not have to be a full number - it can be a fraction (eg. 3.25 - it means some nodes will have a fourth copy)
 
-    swift-ring-builder account.builder create 6 3 1
-    swift-ring-builder container.builder create 6 3 1
-    swift-ring-builder object.builder create 6 3 1
+    sudo swift-ring-builder account.builder create 6 3 1
+    sudo swift-ring-builder container.builder create 6 3 1
+    sudo swift-ring-builder object.builder create 6 3 1
 
 Be sure to change the IP below to your IP!!! (run `ip a` and locate your 10.0.0.x address)
 
     export MY_LOCAL_IP=10.0.0.0
 
-    swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6012/sdb1 100
-    swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6011/sdb1 100
-    swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6010/sdb1 100
-    swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6022/sdb2 100
-    swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6021/sdb2 100
-    swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6020/sdb2 100
-    swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6032/sdb3 100
-    swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6031/sdb3 100
-    swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6030/sdb3 100
-    swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6042/sdb4 100
-    swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6041/sdb4 100
-    swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6040/sdb4 100
+    sudo swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6012/sdb1 100
+    sudo swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6011/sdb1 100
+    sudo swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6010/sdb1 100
+    sudo swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6022/sdb2 100
+    sudo swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6021/sdb2 100
+    sudo swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6020/sdb2 100
+    sudo swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6032/sdb3 100
+    sudo swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6031/sdb3 100
+    sudo swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6030/sdb3 100
+    sudo swift-ring-builder account.builder add z1-$MY_LOCAL_IP:6042/sdb4 100
+    sudo swift-ring-builder container.builder add z1-$MY_LOCAL_IP:6041/sdb4 100
+    sudo swift-ring-builder object.builder add z1-$MY_LOCAL_IP:6040/sdb4 100
 
 Verify and rebalance:
 
-    swift-ring-builder account.builder
-    swift-ring-builder container.builder
-    swift-ring-builder object.builder
+    sudo swift-ring-builder account.builder
+    sudo swift-ring-builder container.builder
+    sudo swift-ring-builder object.builder
 
-    swift-ring-builder account.builder rebalance
-    swift-ring-builder container.builder rebalance
-    swift-ring-builder object.builder rebalance
+    sudo swift-ring-builder account.builder rebalance
+    sudo swift-ring-builder container.builder rebalance
+    sudo swift-ring-builder object.builder rebalance
 
-    swift-ring-builder account.builder
-    swift-ring-builder container.builder
-    swift-ring-builder object.builder
+    sudo swift-ring-builder account.builder
+    sudo swift-ring-builder container.builder
+    sudo swift-ring-builder object.builder
 
-    chown -R swift:swift /etc/swift
-    chown -R swift:swift /var/cache/swift*
-    service swift-proxy restart
-    swift-init all restart
+    sudo chown -R swift:swift /etc/swift
+    sudo chown -R swift:swift /var/cache/swift*
+    sudo service swift-proxy restart
+    sudo swift-init all restart
 
 Now let's do a quick verification that it's working.
 
